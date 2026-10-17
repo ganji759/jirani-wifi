@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Jirani Wi-Fi{% endblock %}</title>
+  <style>
+    :root { --bg: #f6f7f4; --card: #fff; --ink: #1d2a24; --muted: #5f6b65; --brand: #1f7a4d; --bad: #b3261e; --line: #dfe4df; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+    main { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 1.6rem; margin: 0 0 4px; }
+    h2 { font-size: 1.15rem; margin: 0 0 12px; }
+    .muted { color: var(--muted); }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; }
+    .big { font-size: 1.4rem; font-weight: 700; letter-spacing: .03em; }
+    .ok { color: var(--brand); }
+    .err { color: var(--bad); font-weight: 600; }
+    input, select, button { font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); }
+    input, select { width: 100%; margin: 4px 0 10px; }
+    button { background: var(--brand); color: #fff; border: 0; cursor: pointer; font-weight: 600; }
+    button.danger { background: var(--bad); }
+    button.plain { background: #e8ece8; color: var(--ink); }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .row > * { flex: 1 1 140px; }
+    .qr svg { width: 200px; height: 200px; }
+    code { font-size: 1.05rem; }
+  </style>
+</head>
+<body>
+<main>
+{% block body %}{% endblock %}
+</main>
+</body>
+</html>

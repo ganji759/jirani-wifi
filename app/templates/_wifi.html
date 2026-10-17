@@ -1,0 +1,8 @@
+<div class="card">
+  <h2>Your Wi-Fi is on</h2>
+  <p>Name: <span class="big">{{ ssid }}</span></p>
+  <p>Password: <span class="big"><code>{{ password }}</code></span></p>
+  <div class="qr">{{ qr | safe }}</div>
+  <p class="muted">Scan the code with your phone camera to join.</p>
+  <p>Ends: <strong>{{ ends }}</strong> ({{ left }} left)</p>
+</div>
