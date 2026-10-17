@@ -21,6 +21,9 @@ class FakeSlot:
     def turn_off(self):
         self.calls.append(("off",))
 
+    def restore(self):
+        self.calls.append(("restore",))
+
 
 @pytest.fixture
 def setup():
@@ -90,3 +93,11 @@ def test_router_failure_keeps_token_unused(setup):
 
 def test_normalize_code():
     assert normalize_code(" abcd efgh ") == "ABCD-EFGH"
+
+
+def test_restore_ends_session(setup):
+    billing, slot = setup
+    billing.redeem(billing.create_tokens(1, 1)[0], now=T0)
+    billing.restore(now=T0 + timedelta(minutes=5))
+    assert slot.calls[-1] == ("restore",)
+    assert billing.tick(now=T0 + timedelta(minutes=90)) is False

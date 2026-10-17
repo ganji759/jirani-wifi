@@ -25,6 +25,7 @@ CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 class SlotControl(Protocol):
     def turn_on(self, password: str) -> None: ...
     def turn_off(self) -> None: ...
+    def restore(self) -> None: ...
 
 
 class BillingError(Exception):
@@ -103,6 +104,16 @@ class Billing:
                 open_session.ended_at = now
                 db.add(open_session)
                 db.commit()
+
+    def restore(self, now: Optional[datetime] = None) -> None:
+        """End any open session and put the slot back to its original settings."""
+        now = now or utcnow()
+        with self._lock, Session(self.engine) as db:
+            self.slot.restore()
+            for open_session in db.exec(select(WifiSession).where(WifiSession.ended_at.is_(None))):
+                open_session.ended_at = now
+                db.add(open_session)
+            db.commit()
 
     def tick(self, now: Optional[datetime] = None) -> bool:
         """Turn the guest Wi-Fi off when time is up. Return True if it did."""
