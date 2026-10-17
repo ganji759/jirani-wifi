@@ -85,6 +85,7 @@ class SlotManager:
         self._apply({"enable": True, "ssid": self.s.slot_ssid, "password": password})
 
     def turn_off(self) -> None:
+        self.backup()
         # A new random password, so an old password stops working.
         self._apply({"enable": False, "ssid": self.s.slot_ssid, "password": new_password()})
 
