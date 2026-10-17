@@ -70,6 +70,8 @@ class RouterClient:
     def _ajax_post(self, method: str, data: dict) -> dict:
         # The router wants the method name in the body, not in the query.
         body = dict(data)
+        if "sessionid" not in body:
+            body["sessionid"] = self._ajax_get("get_refresh_sessionid")["sessionid"]
         body["ajaxmethod"] = method
         resp = self._http.post(
             "/cgi-bin/ajax",
@@ -85,6 +87,7 @@ class RouterClient:
         if not acs:
             raise RouterError("router did not return acs_random")
         key = _extract_key(acs)
+        self._key = key
         session_id = info.get("sessionid", "")
         result = self._ajax_post(
             "do_login",
@@ -97,6 +100,58 @@ class RouterClient:
         )
         if result.get("login_result") != 0:
             raise RouterError(f"login failed, code {result.get('login_result')}")
+
+    def get_slot(self, index: int) -> dict:
+        """Read one Wi-Fi slot. Index 1 is the main Wi-Fi, 2 to 4 are spare."""
+        slots = self._ajax_get("get_wifi_status")["wifi_status"]
+        raw = slots[index - 1]
+        return {
+            "index": index,
+            "enable": raw["Enable"] == "1",
+            "ssid": decrypt_value(raw["SSID"], self._key),
+            "password": decrypt_value(raw["PreSharedKey"], self._key),
+            "beacon_type": raw["BeaconType"],
+            "encryption": raw["WPAEncryptionModes"],
+            "rekey_interval": raw["X_FH_WPARekeyInterval"],
+            "visible": raw["X_FH_SSIDHide"] == "1",
+            "duration": int(raw.get("duration") or 0),
+        }
+
+    def set_slot(
+        self,
+        index: int,
+        enable: bool,
+        ssid: str,
+        password: str,
+        duration_minutes: int = 0,
+        beacon_type: str = "11i",
+        encryption: str = "AESEncryption",
+        rekey_interval: str = "86400",
+        visible: bool = True,
+    ) -> None:
+        """Write one Wi-Fi slot. The router turns the slot off itself after
+        duration_minutes. Zero means no time limit."""
+        if index == 1:
+            raise RouterError("refusing to change the main Wi-Fi")
+        data = {
+            "wifiIndex": index,
+            "Enable": 1 if enable else 0,
+            "SSID": encrypt_password(ssid, self._key),
+            # The router names this field "hide", but 1 means visible.
+            "X_FH_SSIDHide": 1 if visible else 0,
+            "BeaconType": beacon_type,
+            "X_FH_WPARekeyInterval": rekey_interval,
+            "WPAEncryptionModes": encryption,
+            "PreSharedKey": encrypt_password(password, self._key),
+            "device_type": "HG6543C7",
+        }
+        if duration_minutes:
+            data["duration"] = duration_minutes
+        else:
+            data["Duration"] = 0
+        result = self._ajax_post("setWlanAdvancedCfg", data)
+        if str(result.get("result", "0")) not in ("0", "success"):
+            raise RouterError(f"router refused the change: {result}")
 
     def close(self) -> None:
         self._http.close()
