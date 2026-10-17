@@ -94,3 +94,30 @@ def test_delete_plan_with_tokens_is_refused(client):
     page = client.post("/admin/plans/1/delete", auth=ADMIN)
     assert "cannot delete" in page.text
     assert "1 hour" in client.get("/").text
+
+
+def _make_token(client):
+    client.post("/admin/plans", data={"name": "1 hour", "minutes": 60, "price": 1000}, auth=ADMIN)
+    made = client.post("/admin/tokens", data={"plan_id": 1, "count": 1}, auth=ADMIN, follow_redirects=False)
+    return made.headers["location"].split("new=")[1]
+
+
+def test_use_token_from_admin(client):
+    code = _make_token(client)
+    page = client.post(f"/admin/tokens/{code}/use", auth=ADMIN)
+    assert "Your Wi-Fi is on" in page.text
+    assert f"<code>{code}</code></td>" not in page.text
+    assert client.app.state.jirani.slot.calls[0][0] == "on"
+
+
+def test_delete_unused_token(client):
+    code = _make_token(client)
+    page = client.post(f"/admin/tokens/{code}/delete", auth=ADMIN)
+    assert "deleted" in page.text
+    assert "does not exist" in client.post("/redeem", data={"code": code}).text
+
+
+def test_cannot_delete_used_token(client):
+    code = _make_token(client)
+    client.post("/redeem", data={"code": code})
+    assert "only unused" in client.post(f"/admin/tokens/{code}/delete", auth=ADMIN).text
