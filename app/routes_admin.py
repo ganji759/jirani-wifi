@@ -154,6 +154,29 @@ def start(request: Request, plan_id: int = Form(...)):
     return _back("Guest Wi-Fi is on.")
 
 
+@router.post("/tokens/{code}/use")
+def use_token(request: Request, code: str):
+    """Use a token for the neighbor, for example after they pay you."""
+    try:
+        request.app.state.jirani.billing.redeem(code)
+    except BillingError as exc:
+        return _back(error=str(exc))
+    except (RouterError, httpx.HTTPError) as exc:
+        return _back(error=f"Router problem: {exc}")
+    return _back(f"Token {code} used. Guest Wi-Fi is on.")
+
+
+@router.post("/tokens/{code}/delete")
+def delete_token(request: Request, code: str):
+    with Session(request.app.state.jirani.engine) as db:
+        token = db.get(Token, code)
+        if token is None or token.used_at is not None:
+            return _back(error="You can delete only unused tokens.")
+        db.delete(token)
+        db.commit()
+    return _back(f"Token {code} deleted.")
+
+
 @router.post("/stop")
 def stop(request: Request):
     try:

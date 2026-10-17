@@ -91,9 +91,20 @@
   <h2>Unused tokens</h2>
   {% if unused %}
   <table>
-    <tr><th>Token</th><th>Plan</th><th>Note</th><th>Made</th></tr>
-    {% for t in unused %}<tr><td><code>{{ t.code }}</code></td><td>{{ plan_names.get(t.plan_id) }}</td><td>{{ t.note }}</td><td>{{ local(t.created_at) }}</td></tr>{% endfor %}
+    <tr><th>Token</th><th>Plan</th><th>Note</th><th>Made</th><th></th></tr>
+    {% for t in unused %}
+    <tr>
+      <td><code>{{ t.code }}</code></td><td>{{ plan_names.get(t.plan_id) }}</td><td>{{ t.note }}</td><td>{{ local(t.created_at) }}</td>
+      <td>
+        <div class="row" style="gap:4px">
+          <form method="post" action="/admin/tokens/{{ t.code }}/use" onsubmit="this.querySelector('button').disabled=true"><button style="width:100%">Use now</button></form>
+          <form method="post" action="/admin/tokens/{{ t.code }}/delete" onsubmit="return confirm('Delete token {{ t.code }}?')"><button class="danger" style="width:100%">Delete</button></form>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
   </table>
+  <p class="muted">"Use now" gives the token's time to the guest Wi-Fi. Use it when the neighbor paid and is not online yet.</p>
   {% else %}<p class="muted">None.</p>{% endif %}
 </div>
 
