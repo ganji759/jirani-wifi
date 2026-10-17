@@ -42,6 +42,15 @@ def encrypt_password(plain: str, key: bytes) -> str:
     return out.hex().upper()
 
 
+def decrypt_value(hex_text: str, key: bytes) -> str:
+    """Decrypt a value that the router sends back, such as an SSID name."""
+    cipher = Cipher(algorithms.AES(key), modes.CBC(key))
+    dec = cipher.decryptor()
+    data = dec.update(bytes.fromhex(hex_text)) + dec.finalize()
+    unpadder = padding.PKCS7(128).unpadder()
+    return (unpadder.update(data) + unpadder.finalize()).decode()
+
+
 class RouterError(Exception):
     pass
 
