@@ -30,7 +30,7 @@ def setup():
     engine = create_engine("sqlite://")
     SQLModel.metadata.create_all(engine)
     with Session(engine) as db:
-        db.add(Plan(name="1 hour", minutes=60, price_kes=1))
+        db.add(Plan(name="1 hour", minutes=60, price=1))
         db.commit()
     slot = FakeSlot()
     return Billing(engine, slot), slot

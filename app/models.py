@@ -16,7 +16,7 @@ class Plan(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     minutes: int
-    price_kes: int
+    price: int
     active: bool = True
 
 

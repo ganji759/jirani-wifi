@@ -28,6 +28,8 @@ class Settings:
     slot_index: int
     slot_ssid: str
     admin_pass: str
+    timezone: str
+    currency: str
     data_dir: Path
 
     @property
@@ -50,5 +52,7 @@ def load_settings() -> Settings:
         slot_index=int(os.environ.get("SLOT_INDEX", "2")),
         slot_ssid=os.environ.get("SLOT_SSID", "Jirani-1"),
         admin_pass=os.environ["ADMIN_PASS"],
+        timezone=os.environ.get("TIMEZONE", "Africa/Kampala"),
+        currency=os.environ.get("CURRENCY", "UGX"),
         data_dir=data_dir,
     )
