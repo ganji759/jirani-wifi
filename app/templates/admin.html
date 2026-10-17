@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Admin · Jirani Wi-Fi{% endblock %}
+{% block body %}
+<h1>Admin</h1>
+<p class="muted">Guest Wi-Fi: <strong>{{ ssid }}</strong></p>
+
+{% if msg %}<p class="ok">{{ msg }}</p>{% endif %}
+{% if err %}<p class="err">{{ err }}</p>{% endif %}
+
+{% if new_codes %}
+<div class="card">
+  <h2>New tokens</h2>
+  {% for c in new_codes %}<p class="big"><code>{{ c }}</code></p>{% endfor %}
+  <p class="muted">Give one token to each neighbor after they pay.</p>
+</div>
+{% endif %}
+
+{% if wifi %}
+  {% include "_wifi.html" %}
+  <form method="post" action="/admin/stop" onsubmit="this.querySelector('button').disabled=true">
+    <button class="danger">Turn off now</button>
+  </form>
+{% else %}
+<div class="card">
+  <h2>Guest Wi-Fi is off</h2>
+  {% if plans %}
+  <form method="post" action="/admin/start" onsubmit="this.querySelector('button').disabled=true">
+    <label for="start_plan">Neighbor paid you? Turn it on for</label>
+    <select id="start_plan" name="plan_id">
+      {% for p in plans if p.active %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+    </select>
+    <button>Turn on</button>
+  </form>
+  <p class="muted">This takes about 30 seconds. All Wi-Fi drops for a few seconds while the router applies it.</p>
+  {% else %}
+  <p>Add a plan first.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Make tokens</h2>
+  {% if plans %}
+  <form method="post" action="/admin/tokens">
+    <div class="row">
+      <div><label for="tok_plan">Plan</label>
+        <select id="tok_plan" name="plan_id">
+          {% for p in plans if p.active %}<option value="{{ p.id }}">{{ p.name }} · {{ "{:,}".format(p.price) }} {{ currency }}</option>{% endfor %}
+        </select></div>
+      <div><label for="count">How many</label><input id="count" name="count" type="number" min="1" max="50" value="1"></div>
+    </div>
+    <label for="note">Note (optional)</label>
+    <input id="note" name="note" placeholder="Neighbor name">
+    <button>Make tokens</button>
+  </form>
+  {% else %}<p>Add a plan first.</p>{% endif %}
+</div>
+
+<div class="card">
+  <h2>Plans</h2>
+  {% if plans %}
+  <table>
+    <tr><th>Name</th><th>Time</th><th>Price</th><th></th></tr>
+    {% for p in plans %}
+    <tr>
+      <td>{{ p.name }}{% if not p.active %} <span class="muted">(hidden)</span>{% endif %}</td>
+      <td>{{ p.minutes }} min</td>
+      <td>{{ "{:,}".format(p.price) }} {{ currency }}</td>
+      <td><form method="post" action="/admin/plans/{{ p.id }}/toggle"><button class="plain">{% if p.active %}Hide{% else %}Show{% endif %}</button></form></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+  <form method="post" action="/admin/plans" style="margin-top:12px">
+    <div class="row">
+      <div><label for="pname">Name</label><input id="pname" name="name" placeholder="1 day" required></div>
+      <div><label for="pmin">Minutes</label><input id="pmin" name="minutes" type="number" min="1" placeholder="1440" required></div>
+      <div><label for="pprice">Price ({{ currency }})</label><input id="pprice" name="price" type="number" min="0" required></div>
+    </div>
+    <button>Add plan</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Unused tokens</h2>
+  {% if unused %}
+  <table>
+    <tr><th>Token</th><th>Plan</th><th>Note</th><th>Made</th></tr>
+    {% for t in unused %}<tr><td><code>{{ t.code }}</code></td><td>{{ plan_names.get(t.plan_id) }}</td><td>{{ t.note }}</td><td>{{ local(t.created_at) }}</td></tr>{% endfor %}
+  </table>
+  {% else %}<p class="muted">None.</p>{% endif %}
+</div>
+
+<div class="card">
+  <h2>Recent sessions</h2>
+  {% if history %}
+  <table>
+    <tr><th>Start</th><th>End</th></tr>
+    {% for s in history %}<tr><td>{{ local(s.started_at) }}</td><td>{{ local(s.ended_at or s.ends_at) }}{% if not s.ended_at %} <span class="ok">(open)</span>{% endif %}</td></tr>{% endfor %}
+  </table>
+  {% else %}<p class="muted">None yet.</p>{% endif %}
+</div>
+
+<div class="card">
+  <h2>Remove Jirani Wi-Fi</h2>
+  <p class="muted">This turns the guest Wi-Fi off and puts the router slot back to how it was before this app.</p>
+  {% if backup_exists %}
+  <form method="post" action="/admin/restore" onsubmit="return confirm('Remove the guest Wi-Fi and restore the original settings?')">
+    <button class="danger">Restore original settings</button>
+  </form>
+  {% else %}<p class="muted">Nothing to restore. The app has not changed the router yet.</p>{% endif %}
+</div>
+{% endblock %}
