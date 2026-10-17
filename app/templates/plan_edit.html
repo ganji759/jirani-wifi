@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Edit plan · Jirani Wi-Fi{% endblock %}
+{% block body %}
+<h1>Edit plan</h1>
+<div class="card">
+  <form method="post" action="/admin/plans/{{ plan.id }}/edit">
+    <label for="pname">Name</label>
+    <input id="pname" name="name" value="{{ plan.name }}" required>
+    <label for="pmin">Minutes</label>
+    <input id="pmin" name="minutes" type="number" min="1" value="{{ plan.minutes }}" required>
+    <label for="pprice">Price ({{ currency }})</label>
+    <input id="pprice" name="price" type="number" min="0" value="{{ plan.price }}" required>
+    <p class="muted">The new time also applies to unused tokens of this plan.</p>
+    <div class="row">
+      <button>Save</button>
+      <a href="/admin"><button type="button" class="plain" style="width:100%">Cancel</button></a>
+    </div>
+  </form>
+</div>
+{% endblock %}

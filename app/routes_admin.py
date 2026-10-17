@@ -77,6 +77,48 @@ def add_plan(request: Request, name: str = Form(...), minutes: int = Form(...), 
     return _back("Plan added.")
 
 
+@router.get("/plans/{plan_id}/edit")
+def edit_plan_page(request: Request, plan_id: int):
+    with Session(request.app.state.jirani.engine) as db:
+        plan = db.get(Plan, plan_id)
+    if plan is None:
+        return _back(error="Plan not found.")
+    return templates.TemplateResponse(
+        request, "plan_edit.html", {"plan": plan, "currency": request.app.state.jirani.settings.currency}
+    )
+
+
+@router.post("/plans/{plan_id}/edit")
+def edit_plan(
+    request: Request, plan_id: int, name: str = Form(...), minutes: int = Form(...), price: int = Form(...)
+):
+    if minutes <= 0 or price < 0:
+        return _back(error="Minutes must be more than 0 and price cannot be less than 0.")
+    with Session(request.app.state.jirani.engine) as db:
+        plan = db.get(Plan, plan_id)
+        if plan is None:
+            return _back(error="Plan not found.")
+        plan.name = name.strip()
+        plan.minutes = minutes
+        plan.price = price
+        db.add(plan)
+        db.commit()
+    return _back("Plan changed.")
+
+
+@router.post("/plans/{plan_id}/delete")
+def delete_plan(request: Request, plan_id: int):
+    with Session(request.app.state.jirani.engine) as db:
+        plan = db.get(Plan, plan_id)
+        if plan is None:
+            return _back(error="Plan not found.")
+        if db.exec(select(Token).where(Token.plan_id == plan_id)).first():
+            return _back(error="This plan has tokens, so you cannot delete it. Hide it instead.")
+        db.delete(plan)
+        db.commit()
+    return _back("Plan deleted.")
+
+
 @router.post("/plans/{plan_id}/toggle")
 def toggle_plan(request: Request, plan_id: int):
     with Session(request.app.state.jirani.engine) as db:
