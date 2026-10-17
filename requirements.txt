@@ -1,7 +1,8 @@
-fastapi==0.115.6
-uvicorn==0.34.0
+cryptography==50.0.2
+fastapi==0.143.3
 httpx==0.28.1
-cryptography==44.0.0
-sqlmodel==0.0.22
-jinja2==3.1.5
-python-multipart==0.0.20
+jinja2==3.1.6
+python-multipart==0.0.32
+qrcode==8.2
+sqlmodel==0.0.48
+uvicorn==0.54.0
