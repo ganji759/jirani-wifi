@@ -59,10 +59,12 @@ class RouterClient:
         return resp.json()
 
     def _ajax_post(self, method: str, data: dict) -> dict:
+        # The router wants the method name in the body, not in the query.
+        body = dict(data)
+        body["ajaxmethod"] = method
         resp = self._http.post(
             "/cgi-bin/ajax",
-            params={"ajaxmethod": method},
-            data=data,
+            data=body,
             headers={"X-Requested-With": "XMLHttpRequest"},
         )
         resp.raise_for_status()
