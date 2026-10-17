@@ -71,3 +71,26 @@ def test_admin_start_and_restore(client):
     client.post("/admin/restore", auth=ADMIN)
     assert client.app.state.jirani.slot.calls[-1] == ("restore",)
     assert "Guest Wi-Fi is off" in client.get("/admin", auth=ADMIN).text
+
+
+def test_edit_plan(client):
+    client.post("/admin/plans", data={"name": "1 hour", "minutes": 60, "price": 1000}, auth=ADMIN)
+    assert client.get("/admin/plans/1/edit", auth=ADMIN).status_code == 200
+    client.post("/admin/plans/1/edit", data={"name": "2 hours", "minutes": 120, "price": 1500}, auth=ADMIN)
+    assert "1,500 UGX" in client.get("/").text
+    assert "2 hours" in client.get("/").text
+
+
+def test_delete_plan_without_tokens(client):
+    client.post("/admin/plans", data={"name": "1 hour", "minutes": 60, "price": 1000}, auth=ADMIN)
+    page = client.post("/admin/plans/1/delete", auth=ADMIN)
+    assert "Plan deleted." in page.text
+    assert "1 hour" not in client.get("/").text
+
+
+def test_delete_plan_with_tokens_is_refused(client):
+    client.post("/admin/plans", data={"name": "1 hour", "minutes": 60, "price": 1000}, auth=ADMIN)
+    client.post("/admin/tokens", data={"plan_id": 1, "count": 1}, auth=ADMIN)
+    page = client.post("/admin/plans/1/delete", auth=ADMIN)
+    assert "cannot delete" in page.text
+    assert "1 hour" in client.get("/").text
