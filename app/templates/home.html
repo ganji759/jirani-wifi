@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Jirani Wi-Fi</h1>
+<p class="muted">Buy a token, type it here, and get online.</p>
+
+{% if error %}<p class="err">{{ error }}</p>{% endif %}
+
+{% if wifi %}
+  {% include "_wifi.html" %}
+{% elif active %}
+  <div class="card">
+    <h2>Wi-Fi is on</h2>
+    <p>Time left: <strong>{{ left }}</strong> (ends {{ ends }})</p>
+  </div>
+{% else %}
+  <div class="card"><p>The guest Wi-Fi is off.</p></div>
+{% endif %}
+
+<div class="card">
+  <h2>{% if active %}Add time{% else %}Use a token{% endif %}</h2>
+  <form method="post" action="/redeem">
+    <label for="code">Token</label>
+    <input id="code" name="code" placeholder="ABCD-2345" autocomplete="off" required>
+    <button type="submit">Use token</button>
+  </form>
+  <p class="muted">Turning the Wi-Fi on takes about 30 seconds.</p>
+</div>
+
+{% if plans %}
+<div class="card">
+  <h2>Prices</h2>
+  <table>
+    {% for p in plans %}<tr><td>{{ p.name }}</td><td>{{ "{:,}".format(p.price) }} {{ currency }}</td></tr>{% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}
